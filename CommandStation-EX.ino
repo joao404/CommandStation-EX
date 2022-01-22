@@ -153,7 +153,9 @@ void loop()
 
   // Report any decrease in memory (will automatically trigger on first call)
   static int ramLowWatermark = __INT_MAX__; // replaced on first loop
-
+#ifdef ESP_FAMILY
+  updateMinimumFreeMemory(128);
+#endif
   int freeNow = minimumFreeMemory();
   if (freeNow < ramLowWatermark) {
     ramLowWatermark = freeNow;
