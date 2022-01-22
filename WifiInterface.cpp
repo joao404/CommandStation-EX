@@ -1,22 +1,24 @@
 /*
-    © 2020, Chris Harlow. All rights reserved.
-    © 2020, Harald Barth.
-
-    This file is part of CommandStation-EX
-
-    This is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    It is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with CommandStation.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ *  © 2021 Fred Decker
+ *  © 2020-2022 Harald Barth
+ *  © 2020-2022 Chris Harlow
+ *  All rights reserved.
+ *
+ *  This file is part of CommandStation-EX
+ *
+ *  This is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  It is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with CommandStation.  If not, see <https://www.gnu.org/licenses/>.
+ */
 #ifndef ARDUINO_AVR_UNO_WIFI_REV2
 // This code is NOT compiled on a unoWifiRev2 processor which uses a different architecture 
 #include <avr/pgmspace.h>
@@ -276,9 +278,15 @@ wifiSerialState WifiInterface::setup2(const FSH* SSid, const FSH* password,
 
   StringFormatter::send(wifiStream, F("AT+CIPSERVER=0\r\n")); // turn off tcp server (to clean connections before CIPMUX=1)
   checkForOK(1000, true); // ignore result in case it already was off
-   
+
   StringFormatter::send(wifiStream, F("AT+CIPMUX=1\r\n")); // configure for multiple connections
   if (!checkForOK(1000, true)) return WIFI_DISCONNECTED;
+
+  if(!oldCmd) {                                                                    // no idea to test this on old firmware
+    StringFormatter::send(wifiStream, F("AT+MDNS=1,\"%S\",\"withrottle\",%d\r\n"),
+			  hostname, port);                                         // mDNS responder
+    checkForOK(1000, true);                                                        // dont care if not supported
+  }
 
   StringFormatter::send(wifiStream, F("AT+CIPSERVER=1,%d\r\n"), port); // turn on server on port
   if (!checkForOK(1000, true)) return WIFI_DISCONNECTED;
@@ -328,10 +336,10 @@ wifiSerialState WifiInterface::setup2(const FSH* SSid, const FSH* password,
 void WifiInterface::ATCommand(HardwareSerial * stream,const byte * command) {
   command++;
   if (*command=='\0') { // User gave <+> command  
-      stream->print(F("\nES AT command passthrough mode, use ! to exit\n"));
-     while(stream->available()) stream->read(); // Drain serial input first 
-     bool startOfLine=true;
-     while(true) {
+    stream->print(F("\nES AT command passthrough mode, use ! to exit\n"));
+    while(stream->available()) stream->read(); // Drain serial input first 
+    bool startOfLine=true;
+    while(true) {
       while (wifiStream->available()) stream->write(wifiStream->read());
       if (stream->available()) {
         int cx=stream->read();
@@ -341,19 +349,19 @@ void WifiInterface::ATCommand(HardwareSerial * stream,const byte * command) {
         else startOfLine=false; 
         stream->write(cx);
         wifiStream->write(cx);  
-       }
-     }
-     stream->print(F("Passthrough Ended"));
-     return; 
+      }
+    }
+    stream->print(F("Passthrough Ended"));
+    return; 
   }
   
   if (*command=='X') {
-     connected = true;
-     DIAG(F("++++++ Wifi Connction forced on ++++++++"));
+    connected = true;
+    DIAG(F("++++++ Wifi Connction forced on ++++++++"));
   }
   else {
-        StringFormatter::  send(wifiStream, F("AT+%s\r\n"), command);
-        checkForOK(10000,  true);
+    StringFormatter::  send(wifiStream, F("AT+%s\r\n"), command);
+    checkForOK(10000,  true);
   }
 }
 

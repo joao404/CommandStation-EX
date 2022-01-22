@@ -1,7 +1,11 @@
 /*
- *  © 2020, Chris Harlow. All rights reserved.
+ *  © 2021 Mike S
+ *  © 2021 Fred Decker
+ *  © 2020-2022 Harald Barth
+ *  © 2020-2021 Chris Harlow
+ *  All rights reserved.
  *  
- *  This file is part of Asbelos DCC API
+ *  This file is part of CommandStation-EX
  *
  *  This is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -95,7 +99,7 @@ MotorDriver::MotorDriver(byte power_pin, byte signal_pin, byte signal_pin2, int8
   if (currentPin==UNUSED_PIN) 
     DIAG(F("MotorDriver ** WARNING ** No current or short detection"));  
   else  
-    DIAG(F("MotorDriver currentPin=A%d, senseOffset=%d, rawCurentTripValue(relative to offset)=%d"),
+    DIAG(F("MotorDriver currentPin=A%d, senseOffset=%d, rawCurrentTripValue(relative to offset)=%d"),
     currentPin-A0, senseOffset,rawCurrentTripValue);
 }
 

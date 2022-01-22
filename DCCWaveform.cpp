@@ -1,8 +1,12 @@
 /*
- *  © 2020, Chris Harlow. All rights reserved.
- *  © 2020, Harald Barth.
+ *  © 2021 Neil McKechnie
+ *  © 2021 Mike S
+ *  © 2021 Fred Decker
+ *  © 2020-2021 Harald Barth
+ *  © 2020-2021 Chris Harlow
+ *  All rights reserved.
  *  
- *  This file is part of Asbelos DCC API
+ *  This file is part of CommandStation-EX
  *
  *  This is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -326,7 +330,7 @@ void DCCWaveform::setAckBaseline() {
       if (isMainTrack) return;
       int baseline=motorDriver->getCurrentRaw();
       ackThreshold= baseline + motorDriver->mA2raw(ackLimitmA);
-      if (Diag::ACK) DIAG(F("ACK baseline=%d/%dmA Threshold=%d/%dmA Duration between %dus and %dus"),
+      if (Diag::ACK) DIAG(F("ACK baseline=%d/%dmA Threshold=%d/%dmA Duration between %uus and %uus"),
 			  baseline,motorDriver->raw2mA(baseline),
 			  ackThreshold,motorDriver->raw2mA(ackThreshold),
                           minAckPulseDuration, maxAckPulseDuration);
@@ -346,7 +350,7 @@ void DCCWaveform::setAckPending() {
 
 byte DCCWaveform::getAck() {
       if (ackPending) return (2);  // still waiting
-      if (Diag::ACK) DIAG(F("%S after %dmS max=%d/%dmA pulse=%duS samples=%d gaps=%d"),ackDetected?F("ACK"):F("NO-ACK"), ackCheckDuration,
+      if (Diag::ACK) DIAG(F("%S after %dmS max=%d/%dmA pulse=%uuS samples=%d gaps=%d"),ackDetected?F("ACK"):F("NO-ACK"), ackCheckDuration,
 			  ackMaxCurrent,motorDriver->raw2mA(ackMaxCurrent), ackPulseDuration, numAckSamples, numAckGaps);
       if (ackDetected) return (1); // Yes we had an ack
       return(0);  // pending set off but not detected means no ACK.   

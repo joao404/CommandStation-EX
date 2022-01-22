@@ -1,5 +1,6 @@
  /*
- *  © 2021, Chris Harlow. All rights reserved.
+ *  © 2021 Chris Harlow
+ *  All rights reserved.
  *  
  *  This file is part of DCC++EX
  *
@@ -36,10 +37,10 @@ public:
   
 private:  
   static SerialManager * first;
-  SerialManager(HardwareSerial * myserial);
+  SerialManager(Stream * myserial);
   void loop2();
   void broadcast2(RingStream * ring);
-  HardwareSerial * serial;
+  Stream * serial;
   SerialManager * next;
   byte bufferLength;
   byte buffer[COMMAND_BUFFER_SIZE]; 

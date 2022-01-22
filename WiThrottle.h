@@ -1,5 +1,7 @@
 /*
- *  © 2020, Chris Harlow. All rights reserved.
+ *  © 2021 Mike S
+ *  © 2020-2021 Chris Harlow
+ *  All rights reserved.
  *  
  *  This file is part of Asbelos DCC API
  *
@@ -26,6 +28,7 @@ struct MYLOCO {
     int cab; //address of this loco
     bool broadcastPending;
     uint32_t functionMap;
+    uint32_t functionToggles;
 };
 
 class WiThrottle {

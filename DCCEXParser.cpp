@@ -1,6 +1,12 @@
 /*
- *  © 2020, Chris Harlow. All rights reserved.
- *  © 2020, Harald Barth.
+ *  © 2021 Neil McKechnie
+ *  © 2021 Mike S
+ *  © 2021 Herb Morton
+ *  © 2020-2022 Harald Barth
+ *  © 2020-2021 M Steve Todd
+ *  © 2020-2021 Fred Decker
+ *  © 2020-2021 Chris Harlow
+ *  All rights reserved.
  *  
  *  This file is part of CommandStation-EX
  *
@@ -95,7 +101,7 @@ byte DCCEXParser::stashTarget=0;
 // Non-DCC things like turnouts, pins and sensors are handled in additional JMRI interface classes.
 
 
-int16_t DCCEXParser::splitValues(int16_t result[MAX_COMMAND_PARAMS], const byte *cmd)
+int16_t DCCEXParser::splitValues(int16_t result[MAX_COMMAND_PARAMS], const byte *cmd, bool usehex)
 {
     byte state = 1;
     byte parameterCount = 0;
@@ -133,10 +139,15 @@ int16_t DCCEXParser::splitValues(int16_t result[MAX_COMMAND_PARAMS], const byte 
         case 3: // building a parameter
             if (hot >= '0' && hot <= '9')
             {
-                runningValue = 10 * runningValue + (hot - '0');
+                runningValue = (usehex?16:10) * runningValue + (hot - '0');
                 break;
             }
             if (hot >= 'a' && hot <= 'z') hot=hot-'a'+'A'; // uppercase a..z
+            if (usehex && hot>='A' && hot<='F') {
+                // treat A..F as hex not keyword
+                runningValue = 16 * runningValue + (hot - 'A' + 10);
+                break;
+            }
             if (hot >= 'A' && hot <= 'Z')
             {
                 // Since JMRI got modified to send keywords in some rare cases, we need this
@@ -148,66 +159,6 @@ int16_t DCCEXParser::splitValues(int16_t result[MAX_COMMAND_PARAMS], const byte 
             parameterCount++;
             state = 1;
             continue;
-        }
-        remainingCmd++;
-    }
-    return parameterCount;
-}
-
-int16_t DCCEXParser::splitHexValues(int16_t result[MAX_COMMAND_PARAMS], const byte *cmd)
-{
-    byte state = 1;
-    byte parameterCount = 0;
-    int16_t runningValue = 0;
-    const byte *remainingCmd = cmd + 1; // skips the opcode
-    
-    // clear all parameters in case not enough found
-    for (int16_t i = 0; i < MAX_COMMAND_PARAMS; i++)
-        result[i] = 0;
-
-    while (parameterCount < MAX_COMMAND_PARAMS)
-    {
-        byte hot = *remainingCmd;
-
-        switch (state)
-        {
-
-        case 1: // skipping spaces before a param
-            if (hot == ' ')
-                break;
-            if (hot == '\0' || hot == '>')
-                return parameterCount;
-            state = 2;
-            continue;
-
-        case 2: // checking first hex digit
-            runningValue = 0;
-            state = 3;
-            continue;
-
-        case 3: // building a parameter
-            if (hot >= '0' && hot <= '9')
-            {
-                runningValue = 16 * runningValue + (hot - '0');
-                break;
-            }
-            if (hot >= 'A' && hot <= 'F')
-            {
-                runningValue = 16 * runningValue + 10 + (hot - 'A');
-                break;
-            }
-            if (hot >= 'a' && hot <= 'f')
-            {
-                runningValue = 16 * runningValue + 10 + (hot - 'a');
-                break;
-            }
-            if (hot==' ' || hot=='>' || hot=='\0') { 
-               result[parameterCount] = runningValue;
-               parameterCount++;
-               state = 1;
-               continue;
-            }
-            return -1; // invalid hex digit
         }
         remainingCmd++;
     }
@@ -251,9 +202,9 @@ void DCCEXParser::parse(Print *stream, byte *com, RingStream * ringStream)
     int16_t p[MAX_COMMAND_PARAMS];
     while (com[0] == '<' || com[0] == ' ')
         com++; // strip off any number of < or spaces
-    byte params = splitValues(p, com);
     byte opcode = com[0];
-
+    byte params = splitValues(p, com, opcode=='M' || opcode=='P');
+    
     if (filterCallback)
         filterCallback(stream, opcode, params, p);
     if (filterRMFTCallback && opcode!='\0')
@@ -367,8 +318,8 @@ void DCCEXParser::parse(Print *stream, byte *com, RingStream * ringStream)
 
     case 'M': // WRITE TRANSPARENT DCC PACKET MAIN <M REG X1 ... X9>
     case 'P': // WRITE TRANSPARENT DCC PACKET PROG <P REG X1 ... X9>
-        // Re-parse the command using a hex-only splitter
-        params=splitHexValues(p,com)-1; // drop REG
+        // NOTE: this command was parsed in HEX instead of decimal
+        params--; // drop REG
         if (params<1) break;  
         {
           byte packet[params];
@@ -430,66 +381,69 @@ void DCCEXParser::parse(Print *stream, byte *com, RingStream * ringStream)
         break;
 
     case '1': // POWERON <1   [MAIN|PROG|JOIN]>
-        { 
+        {
         bool main=false;
         bool prog=false;
-        bool join=false;     
+        bool join=false;
         if (params > 1) break;
-        if (params==0) { // <1>
-            main=true; 
-            prog=true; 
-        }
-        else if (p[0] == HASH_KEYWORD_JOIN) {  // <1 JOIN>
-            main=true; 
+        if (params==0 || MotorDriver::commonFaultPin) { // <1> or tracks can not be handled individually
+            main=true;
             prog=true;
-            join=!MotorDriver::commonFaultPin; 
         }
-        else if (p[0]==HASH_KEYWORD_MAIN) { // <1 MAIN>
-            main=true; 
-        } 
-        else if (p[0]==HASH_KEYWORD_PROG) { // <1 PROG>
-            prog=true; 
-        }
-        else break; // will reply <X>
-
+	if (params==1) {
+	  if (p[0] == HASH_KEYWORD_JOIN) {  // <1 JOIN>
+            main=true;
+            prog=true;
+            join=true;
+	  }
+	  else if (p[0]==HASH_KEYWORD_MAIN) { // <1 MAIN>
+            main=true;
+	  }
+	  else if (p[0]==HASH_KEYWORD_PROG) { // <1 PROG>
+            prog=true;
+	  }
+	  else break; // will reply <X>
+	}
         if (main) DCCWaveform::mainTrack.setPowerMode(POWERMODE::ON);
         if (prog) DCCWaveform::progTrack.setPowerMode(POWERMODE::ON);
-        DCC::setProgTrackSyncMain(join); 
-             
-        CommandDistributor::broadcastPower();        
-        return;
-        }
-        
-    case '0': // POWEROFF <0 [MAIN | PROG] >
-        { 
-        bool main=false;
-        bool prog=false;
-        if (params > 1) break;
-        if (params==0) { // <0>
-            main=true; 
-            prog=true; 
-        }
-        else if (p[0]==HASH_KEYWORD_MAIN) { // <0 MAIN>
-            main=true; 
-        } 
-        else if (p[0]==HASH_KEYWORD_PROG) { // <0 PROG>
-            prog=true; 
-        }
-        else break; // will reply <X>
+        DCC::setProgTrackSyncMain(join);
 
-        if (main) DCCWaveform::mainTrack.setPowerMode(POWERMODE::OFF);
-        if (prog) {
-            DCC::setProgTrackBoost(false);  // Prog track boost mode will not outlive prog track off        
-            DCCWaveform::progTrack.setPowerMode(POWERMODE::OFF);
-        }
-        DCC::setProgTrackSyncMain(false); 
-             
         CommandDistributor::broadcastPower();
         return;
         }
-        
+
+    case '0': // POWEROFF <0 [MAIN | PROG] >
+        {
+        bool main=false;
+        bool prog=false;
+        if (params > 1) break;
+        if (params==0 || MotorDriver::commonFaultPin) { // <0> or tracks can not be handled individually
+	  main=true;
+	  prog=true;
+        }
+	if (params==1) {
+	  if (p[0]==HASH_KEYWORD_MAIN) { // <0 MAIN>
+	    main=true;
+	  }
+	  else if (p[0]==HASH_KEYWORD_PROG) { // <0 PROG>
+	    prog=true;
+	  }
+	  else break; // will reply <X>
+	}
+
+        if (main) DCCWaveform::mainTrack.setPowerMode(POWERMODE::OFF);
+        if (prog) {
+            DCC::setProgTrackBoost(false);  // Prog track boost mode will not outlive prog track off
+            DCCWaveform::progTrack.setPowerMode(POWERMODE::OFF);
+        }
+        DCC::setProgTrackSyncMain(false);
+
+        CommandDistributor::broadcastPower();
+        return;
+        }
+
     case '!': // ESTOP ALL  <!>
-        DCC::setThrottle(0,1,1); // this broadcasts speed 1(estop) and sets all reminders to speed 1. 
+        DCC::setThrottle(0,1,1); // this broadcasts speed 1(estop) and sets all reminders to speed 1.
         return;
 
     case 'c': // SEND METER RESPONSES <c>
@@ -790,10 +744,10 @@ bool DCCEXParser::parseD(Print *stream, int16_t params, int16_t p[])
 	      LCD(1, F("Ack Limit=%dmA"), p[2]);  // <D ACK LIMIT 42>
 	    } else if (p[1] == HASH_KEYWORD_MIN) {
 	      DCCWaveform::progTrack.setMinAckPulseDuration(p[2]);
-	      LCD(0, F("Ack Min=%dus"), p[2]);  //   <D ACK MIN 1500>
+	      LCD(0, F("Ack Min=%uus"), p[2]);  //   <D ACK MIN 1500>
 	    } else if (p[1] == HASH_KEYWORD_MAX) {
 	      DCCWaveform::progTrack.setMaxAckPulseDuration(p[2]);
-	      LCD(0, F("Ack Max=%dus"), p[2]);  //   <D ACK MAX 9000>
+	      LCD(0, F("Ack Max=%uus"), p[2]);  //   <D ACK MAX 9000>
 	    } else if (p[1] == HASH_KEYWORD_RETRY) {
 	      if (p[2] >255) p[2]=3;
 	      LCD(0, F("Ack Retry=%d Sum=%d"), p[2], DCC::setAckRetry(p[2]));  //   <D ACK RETRY 2>

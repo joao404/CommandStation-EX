@@ -1,5 +1,7 @@
  /*
- *  © 2021, Chris Harlow. All rights reserved.
+ *  © 2021 Chris Harlow
+ *  © 2022 Harald Barth
+ *  All rights reserved.
  *  
  *  This file is part of DCC++EX
  *
@@ -18,29 +20,33 @@
  */
 
 #include "SerialManager.h"
- #include "DCCEXParser.h"
-  SerialManager * SerialManager::first=NULL;
+#include "DCCEXParser.h"
+SerialManager * SerialManager::first=NULL;
 
-  SerialManager::SerialManager(HardwareSerial * myserial) {
-    serial=myserial;
-    next=first;
-    first=this;
-    bufferLength=0;
-    myserial->begin(115200);
-    inCommandPayload=false; 
-  } 
+SerialManager::SerialManager(Stream * myserial) {
+  serial=myserial;
+  next=first;
+  first=this;
+  bufferLength=0;
+  inCommandPayload=false; 
+} 
 
 void SerialManager::init() {
+  while (!Serial && millis() < 5000); // wait max 5s for Serial to start
+  Serial.begin(115200);
+  new SerialManager(&Serial);
 #ifdef SERIAL3_COMMANDS
-    new SerialManager(&Serial3);
+  Serial3.begin(115200);
+  new SerialManager(&Serial3);
 #endif
 #ifdef SERIAL2_COMMANDS
-    new SerialManager(&Serial2);
+  Serial2.begin(115200);
+  new SerialManager(&Serial2);
 #endif
 #ifdef SERIAL1_COMMANDS
-    new SerialManager(&Serial1);
+  Serial1.begin(115200);
+  new SerialManager(&Serial1);
 #endif
-   new SerialManager(&Serial);
 }
 
 void SerialManager::broadcast(RingStream * ring) {

@@ -24,6 +24,8 @@
 //       Can disable EEPROM code
 //       Can define border between long and short addresses
 //       Turnout and accessory states (thrown/closed = 0/1 or 1/0) can be set to match RCN-213
+//       Bugfix: one-off error in CIPSEND drop
+//       Bugfix: disgnostic display of ack pulses >32kus
 //       ...
 // 3.1.7 Bugfix: Unknown locos should have speed forward 
 // 3.1.6 Make output ID two bytes and guess format/size of registered outputs found in EEPROM
