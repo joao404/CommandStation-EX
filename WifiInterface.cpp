@@ -19,6 +19,8 @@
  *  You should have received a copy of the GNU General Public License
  *  along with CommandStation.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include "WifiInterface.h"        /* config.h included there */
+#ifndef ESP_FAMILY
 #ifndef ARDUINO_AVR_UNO_WIFI_REV2
 // This code is NOT compiled on a unoWifiRev2 processor which uses a different architecture 
 #include <avr/pgmspace.h>
@@ -404,3 +406,4 @@ void WifiInterface::loop() {
 }
 
 #endif //ARDUINO_AVR_UNO_WIFI_REV2
+#endif //ESP_FAMILY
