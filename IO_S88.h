@@ -34,7 +34,7 @@ class S88: public IODevice {
       _psPin = psPin;      //PS/LOAD
       _clkPin = clkPin;      //Clock
       _dataPin = dataPin;    //Data input
-      int numberOfModuls = (_nPins / 8) + (_nPins % 8) ?  1 : 0;
+      _numberOfModuls = (_nPins / 8) + (_nPins % 8) ?  1 : 0;
       _moduls = new uint8_t[numberOfModuls];
       // initalize pins
       pinMode(_resetPin, OUTPUT);    //Reset
@@ -94,7 +94,7 @@ class S88: public IODevice {
         else _readData();    //Read Data IN 2. bis (Module*8) Bit
       }
       _rCount++;      //Zähler für Durchläufe/Takt
-      if (_mCount == _nPins)
+      if (_mCount == _numberOfModuls)
       { //Alle Module ausgelesen?
         _rCount = 0;                    //setzte Zähler zurück
         _mCount = 0;                  //beginne beim ersten Modul
@@ -123,6 +123,7 @@ class S88: public IODevice {
     int _clkPin;      //Clock
     int _dataPin;    //Data input
 
+    uint8_t _numberOfModuls;
     uint8_t *_moduls;
 
     const unsigned long intervalINus{400};
