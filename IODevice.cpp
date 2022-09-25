@@ -42,13 +42,14 @@ extern __attribute__((weak)) void mySetup();  // Deprecated function name, outpu
 
 // Static method to initialise the IODevice subsystem.  
 
-#if !defined(IO_NO_HAL)
+
 
 // Create any standard device instances that may be required, such as the Arduino pins 
 // and PCA9685.
 void IODevice::begin() {
   // Initialise the IO subsystem
   ArduinoPins::create(2, NUM_DIGITAL_PINS-2);  // Reserve pins for direct access
+  #if !defined(IO_NO_HAL)
   // Predefine two PCA9685 modules 0x40-0x41
   // Allocates 32 pins 100-131
   PCA9685::create(100, 16, 0x40);
@@ -57,6 +58,7 @@ void IODevice::begin() {
   // Allocates 32 pins 164-195
   MCP23017::create(164, 16, 0x20);
   MCP23017::create(180, 16, 0x21);
+  #endif
 
   // Call the begin() methods of each configured device in turn
   for (IODevice *dev=_firstDevice; dev!=NULL; dev = dev->_nextDevice) {
@@ -301,7 +303,7 @@ bool IODevice::owns(VPIN id) {
   return (id >= _firstVpin && id < _firstVpin + _nPins);
 }
 
-
+/*
 #else // !defined(IO_NO_HAL)
 
 // Minimal implementations of public HAL interface, to support Arduino pin I/O and nothing more.
@@ -346,6 +348,7 @@ void IODevice::setGPIOInterruptPin(int16_t) {}
 IONotifyCallback *IONotifyCallback::first = 0;
 
 #endif // IO_NO_HAL
+*/
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
