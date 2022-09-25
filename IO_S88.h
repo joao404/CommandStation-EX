@@ -26,15 +26,15 @@
 class S88: public IODevice {
   public:
     // Constructor
-    S88(VPIN firstVpinAddress, int numberOfModuls, int dataPin, int clkPin, int psPin, int resetPin) {
+    S88(VPIN firstVpinAddress, int nPins, int dataPin, int clkPin, int psPin, int resetPin) {
       _firstVpin = firstVpinAddress;
-      _nPins = numberOfModuls;
+      _nPins = nPins;
 
       _resetPin = resetPin;    //Reset
       _psPin = psPin;      //PS/LOAD
       _clkPin = clkPin;      //Clock
       _dataPin = dataPin;    //Data input
-
+      int numberOfModuls = (_nPins / 8) + (_nPins % 8) ?  1 : 0;
       _moduls = new uint8_t[numberOfModuls];
       // initalize pins
       pinMode(_resetPin, OUTPUT);    //Reset
@@ -63,7 +63,7 @@ class S88: public IODevice {
     int _read(VPIN vpin) override {
       // Return acquired data value, e.g.
       int pin = vpin - _firstVpin;
-	  if(pin >= _nPins * 8) return 0;
+	  if(pin >= _nPins) return 0;
       return bitRead(_moduls[pin / 8], pin % 8);
     }
 
