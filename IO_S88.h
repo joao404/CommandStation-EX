@@ -63,6 +63,7 @@ class S88: public IODevice {
     int _read(VPIN vpin) override {
       // Return acquired data value, e.g.
       int pin = vpin - _firstVpin;
+	  if(pin >= _nPins * 8) return 0;
       return bitRead(_moduls[pin / 8], pin % 8);
     }
 
