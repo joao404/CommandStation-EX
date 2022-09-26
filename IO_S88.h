@@ -35,7 +35,7 @@ class S88: public IODevice {
       _clkPin = clkPin;      //Clock
       _dataPin = dataPin;    //Data input
       _numberOfModuls = (_nPins / 8) + (_nPins % 8) ?  1 : 0;
-      _moduls = new uint8_t[numberOfModuls];
+      _moduls = new uint8_t[_numberOfModuls];
       // initalize pins
       pinMode(_resetPin, OUTPUT);    //Reset
       pinMode(_psPin, OUTPUT);      //PS/LOAD
