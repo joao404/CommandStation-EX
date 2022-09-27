@@ -26,7 +26,7 @@
 class S88: public IODevice {
   public:
     // Constructor
-    S88(VPIN firstVpinAddress, int nPins, int dataPin, int clkPin, int psPin, int resetPin) {
+    S88(VPIN firstVpinAddress, uint8_t nPins, int dataPin, int clkPin, int psPin, int resetPin) {
       _firstVpin = firstVpinAddress;
       _nPins = nPins;
 
@@ -34,7 +34,7 @@ class S88: public IODevice {
       _psPin = psPin;      //PS/LOAD
       _clkPin = clkPin;      //Clock
       _dataPin = dataPin;    //Data input
-      _numberOfModuls = (_nPins / 8) + (_nPins % 8) ?  1 : 0;
+      _numberOfModuls = (_nPins / 8) + ((_nPins % 8) ?  1 : 0);
       _moduls = new uint8_t[_numberOfModuls];
       // initalize pins
       pinMode(_resetPin, OUTPUT);    //Reset
@@ -68,7 +68,7 @@ class S88: public IODevice {
     }
 
     void _display() override {
-      DIAG(F("S88 Configured on Vpins:%d-%d %S"), _firstVpin, _firstVpin + _nPins - 1,
+      DIAG(F("S88 Configured on Vpins:%d-%d with %d 8pin moduls %S"), _firstVpin, _firstVpin + _nPins - 1, _numberOfModuls,
            _deviceState == DEVSTATE_FAILED ? F("OFFLINE") : F(""));
     }
 
@@ -128,7 +128,7 @@ class S88: public IODevice {
 
     const unsigned long intervalINus{400};
 
-    unsigned int _rCount;    //Lesezähler 0-39 Zyklen (S88Module * 8 * 2 + 10)
+    uint8_t _rCount;    //Lesezähler 0-39 Zyklen (S88Module * 8 * 2 + 10)
     uint8_t _mCount;   //Lesezähler für S88 Module
     uint8_t _pCount;   //Lesezähler für S88 Pin am Modul
 };
