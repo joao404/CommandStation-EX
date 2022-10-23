@@ -1,3 +1,19 @@
+# What is different to DCC++ EX
+This repository has S88 support as an addition to original DCC++ EX.
+Create myHal.cpp and copy following lines to add S88 support for 16 pins.
+
+#include "IODevice.h"
+#include "IO_S88.h"
+
+void halSetup() {
+	int numberOfPins{16};
+	int DATA{A2}; // pin 2 on RJ45
+	int CLOCK{A3}; // pin 4 on RJ45
+	int PS{A4}; // pin 6 on RJ45
+	int RESET{A5}; // pin 7 on RJ45
+  S88::create(100, numberOfPins, DATA, CLOCK, PS, RESET);
+}
+
 # What is DCC++ EX?
 DCC++ EX is the organization maintaining several codebases that together represent a fully open source DCC system. Currently, this includes the following:
 
