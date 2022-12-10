@@ -3,7 +3,9 @@
 
 #include "StringFormatter.h"
 
-#define VERSION "4.1.1"
+#define VERSION "4.1.3"
+// 4.1.3 Bugfix: Ethernet init order
+// 4.1.2 Bugfix: Ethernet shield W5100 does not report HW or link level
 // 4.1.1 Bugfix: preserve turnout format
 //       Bugfix: parse multiple commands in one buffer string correctly (ex: <s><Q>)
 //       Bugfix: </> command signal status of EX-RAIL tasks or threads
@@ -15,7 +17,7 @@
 //       UNO Progmem optimized to allow for small EXRAIL Automation scipts
 // 4.0.2 Command Station and EX-RAIL Ehancements & Additions:
 //       New JA, JR, JT commands availabe for Throttle Developers to obtain Route, Roster and Turnout descriptions for communications
-//       Change ACK defaults now set to LIMIT 50mA, MIN 2000uS, MAX 2000uS for more compatibility with non NMRA compliant decoders
+//       Change ACK defaults now set to LIMIT 50mA, MIN 2000uS, MAX 20000uS for more compatibility with non NMRA compliant decoders
 //       New Commands for the Arduino IDE Serial Monitor and JMRI DCC++ Traffic Monitor
 //        </RED signal_id>   to turn a individual LED Signal On & Off
 //        </AMBER signal_id> "
