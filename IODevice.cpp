@@ -50,29 +50,6 @@ extern __attribute__((weak)) void exrailHalSetup();
 void IODevice::begin() {
   // Initialise the IO subsystem defaults
   ArduinoPins::create(2, NUM_DIGITAL_PINS-2);  // Reserve pins for direct access
-<<<<<<< HEAD
-  #if !defined(IO_NO_HAL)
-  // Predefine two PCA9685 modules 0x40-0x41
-  // Allocates 32 pins 100-131
-  PCA9685::create(100, 16, 0x40);
-  PCA9685::create(116, 16, 0x41);
-  // Predefine two MCP23017 module 0x20/0x21
-  // Allocates 32 pins 164-195
-  MCP23017::create(164, 16, 0x20);
-  MCP23017::create(180, 16, 0x21);
-  #endif
-
-  // Call the begin() methods of each configured device in turn
-  for (IODevice *dev=_firstDevice; dev!=NULL; dev = dev->_nextDevice) {
-    dev->_begin();
-  }
-  _initPhase = false;
-
-  // Check for presence of deprecated mySetup() function, and output warning.
-  if (mySetup)
-    DIAG(F("WARNING: mySetup() function should be renamed to halSetup()"));
-=======
->>>>>>> upstream/master
 
   // Call user's halSetup() function (if defined in the build in myHal.cpp).
   //  The contents will depend on the user's system hardware configuration.
