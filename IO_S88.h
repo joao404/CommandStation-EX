@@ -106,7 +106,7 @@ class S88: public IODevice {
       }
     }
 
-    inline _readData(void)
+    inline void _readData(void)
     {
       digitalWrite(_clkPin, LOW);  //LOW-Flanke, dann liegen die Daten an
       byte getData = digitalRead(_dataPin);  //Bit einlesen
